@@ -77,6 +77,12 @@ The service validates numeric bounds and requires at least two finite, strictly 
 
 Vitest and React Testing Library cover each component, the service, API routes, and all pages. They check keyboard and pointer interaction, editable prices, bounds, response validation, and request cancellation. Exercise page tests use the real service and selector, mocking only `fetch` to check loading, interaction, errors, and retry.
 
+## Continuous integration
+
+Pull requests targeting `main` run the `Quality checks` job in GitHub Actions. It installs dependencies with `npm ci`, then runs lint, TypeScript checks, and tests using the Node.js version in `.nvmrc`. New commits to the pull request rerun the checks and cancel any previous run still in progress.
+
+To enforce these checks before merging, configure branch protection for `main` to require a pull request and the `Quality checks` status check.
+
 ## Dependency notes
 
 Some transitive ESLint plugins report peer dependency warnings with ESLint 10; linting passes with the pinned versions. The last audit reported the [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) in development dependencies. The proposed automatic fix downgrades `eslint-config-next` to version 14 and has not been applied to this Next.js 16 project. The production audit (`npm audit --omit=dev`) reported no vulnerabilities.
