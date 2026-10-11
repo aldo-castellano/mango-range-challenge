@@ -26,3 +26,41 @@
   color: #525252;
   font-size: 1.125rem;
 }
+
+.example {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #d5d5d5;
+}
+
+.subtitle {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.main a {
+  color: inherit;
+  text-underline-offset: 0.25em;
+}
+
+.main a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #d5d5d5;
+}
+
+.navigation a,
+.subtitle a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}

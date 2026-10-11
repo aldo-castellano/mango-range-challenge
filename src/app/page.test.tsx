@@ -11,4 +11,6 @@ test('presents the challenge heading inside the main content', () => {
       name: 'Range Challenge',
     }),
   ).toBeVisible();
+  expect(screen.getByRole('link', { name: 'Exercise 1: Numeric range' })).toHaveAttribute('href', '/exercise1');
+  expect(screen.getByRole('link', { name: 'Exercise 2: Fixed prices' })).toHaveAttribute('href', '/exercise2');
 });
