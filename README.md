@@ -4,7 +4,7 @@ A technical challenge to build a price range selector with two modes: a numeric 
 
 ## Status
 
-Phase 2: the project foundation now includes mock HTTP endpoints and a validated data service. The Range component and exercise pages will be added in subsequent phases.
+Phase 3: the Range component now supports both modes, keyboard interaction, and pointer dragging. The home page shows two examples with explicit demo values. Price editing and exercise pages connected to the mock HTTP endpoints will follow in subsequent phases.
 
 ## Requirements
 
@@ -52,6 +52,11 @@ src/
     page.test.tsx    # Home page test
     globals.css      # Shared base styles
     icon.svg         # Browser tab icon
+  components/
+    Range/
+      Range.tsx         # Selection state, keyboard, and pointer interaction
+      Range.module.css  # Track, handles, and focus styles
+      Range.test.tsx
   services/
     range.service.ts        # HTTP requests and response validation
     range.service.test.ts
@@ -61,7 +66,22 @@ src/
     setup.ts        # DOM matchers and cleanup between tests
 ```
 
-The home page is a synchronous Server Component. It requires no state or interaction logic. Page-specific styles are encapsulated with CSS Modules; global styles cover the visual baseline and keyboard focus. System fonts avoid external downloads during builds.
+The home page is a synchronous Server Component containing two Range Client Components. Each Range owns its selection state. Component and page styles are encapsulated with CSS Modules; global styles cover the visual baseline and keyboard focus. System fonts avoid external downloads during builds.
+
+## Range component
+
+```tsx
+<Range mode="continuous" min={1} max={100} />
+<Range mode="discrete" values={[1.99, 5.99, 10.99, 30.99, 50.99, 70.99]} />
+```
+
+Each instance starts with both extremes selected. Numeric mode changes by one unit; fixed mode advances one option at a time, with equally spaced positions. The controls can share a value but cannot cross or leave the allowed range.
+
+Tab moves between the handles in a stable order. Right/Up increase the value and Left/Down decrease it. Home and End move to the first and last values allowed by the other handle. Each handle exposes its price and current limits through ARIA, with a visible focus indicator. The component uses custom elements, not HTML range inputs.
+
+Both handles can be dragged with a mouse or touch pointer. Clicking the track moves the nearest handle. Pointer capture keeps the drag active outside the track, and release or cancellation ends it. When handles overlap, the initial drag direction determines which one moves. Keyboard and pointer input share the same boundary checks.
+
+The component expects a valid configuration, as returned by the service, that remains fixed while mounted. It does not fetch data or synchronize changing configurations. Editable numeric labels belong to the next phase.
 
 ## Data flow
 
@@ -78,14 +98,14 @@ The service accepts an optional `AbortSignal` for cancellation and uses relative
 
 ## Tests
 
-Vitest and React Testing Library cover the home page, endpoint contracts, service validation, and HTTP errors. Tests live alongside the code they cover. Page integration tests will be added with the same tools when the exercise pages are implemented.
+Vitest and React Testing Library cover the home page, endpoint contracts, service validation, HTTP errors, and Range keyboard and pointer behavior. Component tests check allowed prices, limits, non-crossing handles, and accessible values. Tests live alongside the code they cover. Page integration tests will be added with the same tools when the exercise pages are implemented.
 
 ## Development phases
 
 1. Project foundation.
 2. Mock HTTP endpoints and validated data service.
-3. Range core and keyboard navigation.
-4. Dragging and price editing.
+3. Range core, keyboard navigation, and pointer dragging.
+4. Price editing.
 5. `/exercise1` and `/exercise2` pages, data loading, and integration tests.
 6. Final review and delivery documentation.
 
