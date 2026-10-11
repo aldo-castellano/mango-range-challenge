@@ -148,7 +148,7 @@ export default function Range(props: RangeConfig) {
       handlesRef.current[drag.handle]?.focus();
     }
 
-    const next = min + Math.round(drag.startValue - min + (distance / width) * (max - min));
+    const next = drag.startValue + Math.round((distance / width) * (max - min));
     updateValue(drag.handle, next);
   }
 

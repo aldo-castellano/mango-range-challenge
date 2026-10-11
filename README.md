@@ -1,126 +1,82 @@
 # Mango Range Challenge
 
-A technical challenge to build a price range selector with two modes: a numeric interval and predefined values.
+A price range selector built with Next.js App Router, TypeScript, and CSS Modules. It supports a numeric interval with editable prices and a predefined set of fixed prices.
 
-## Status
+## Getting started
 
-Phase 4: the Range component supports both modes, keyboard interaction, pointer dragging, and two editable prices in numeric mode. The home page shows two examples with explicit demo values. Exercise pages connected to the mock HTTP endpoints will follow in the next phase.
-
-## Requirements
-
-- Node.js 22.20.0 (specified in `.nvmrc`).
-- npm 10.
-
-## Installation and development
+Requires Node.js 22.20.0 (see `.nvmrc`) and npm 10.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open [http://localhost:8080](http://localhost:8080).
+Open [http://localhost:8080](http://localhost:8080). Both development and production use port 8080.
 
-To use a different port for a local review, run `npm run dev -- --port 8000` and open [http://localhost:8000](http://localhost:8000). The default remains 8080 as required by the exercise.
-
-If PowerShell's execution policy prevents running `npm`, use `npm.cmd` with the same arguments without changing the system policy.
+| Page | Purpose |
+| --- | --- |
+| `/` | Exercise index. |
+| `/exercise1` | Numeric range with two editable price inputs. |
+| `/exercise2` | Predefined prices with read-only labels. |
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Starts the development server on port 8080. |
-| `npm run build` | Creates the production build. |
-| `npm start` | Serves the production build on port 8080. |
-| `npm run typecheck` | Generates Next.js route types and checks TypeScript. |
-| `npm run lint` | Runs ESLint with no warnings allowed. |
-| `npm test` | Runs tests once. |
-| `npm run test:watch` | Runs tests when files change. |
+| `npm run dev` | Start the development server. |
+| `npm run build` | Create the production build. |
+| `npm start` | Serve the production build. |
+| `npm run typecheck` | Generate route types and check TypeScript. |
+| `npm run lint` | Run ESLint. |
+| `npm test` | Run tests once. |
+| `npm run test:watch` | Rerun tests when files change. |
 
-To test production, stop the development server first, run `npm run build`, then run `npm start`.
+For production, run `npm run build` followed by `npm start`.
 
 ## Structure
 
 ```text
 src/
-  app/
-    api/
-      range/          # Numeric range endpoint and test
-      range-options/  # Fixed prices endpoint and test
-    layout.tsx       # HTML document, language, and metadata
-    page.tsx         # Home page
-    page.module.css  # Local home page styles
-    page.test.tsx    # Home page test
-    globals.css      # Shared base styles
-    icon.svg         # Browser tab icon
+  app/                       # Pages, layouts, and mock API routes
   components/
-    Range/
-      Range.tsx         # Selection state, price editing, keyboard, and pointer interaction
-      Range.module.css  # Track, handles, and focus styles
-      Range.test.tsx
-  services/
-    range.service.ts        # HTTP requests and response validation
-    range.service.test.ts
-  types/
-    range-config.ts         # Numeric and fixed range configuration types
-  test/
-    setup.ts        # DOM matchers and cleanup between tests
+    Range/                   # Selection, price editing, and keyboard/pointer controls
+    RangeExercise/           # Data loading, error message, and retry
+  services/range.service.ts  # HTTP requests and response validation
+  types/range-config.ts      # Shared configuration types
+  test/setup.ts              # DOM matchers and test cleanup
 ```
 
-The home page is a synchronous Server Component containing two Range Client Components. Each Range owns its selection state. Component and page styles are encapsulated with CSS Modules; global styles cover the visual baseline and keyboard focus. System fonts avoid external downloads during builds.
+Pages render `RangeExercise`, which loads the configuration and passes it to `Range`. The selector owns its selection state and does not fetch data. Tests sit alongside the code they cover.
 
-## Range component
+## Range behavior
 
 ```tsx
 <Range mode="continuous" min={1} max={100} />
 <Range mode="discrete" values={[1.99, 5.99, 10.99, 30.99, 50.99, 70.99]} />
 ```
 
-Each instance starts with both extremes selected. Numeric mode changes by one unit; fixed mode advances one option at a time, with equally spaced positions. The controls can share a value but cannot cross or leave the allowed range.
+- Both handles support mouse and touch dragging. Clicking the track moves the nearest handle. Values cannot cross or leave the configured bounds.
+- Tab focuses each handle; arrow keys change its value. Home and End select the lowest and highest allowed values. Handles expose their current values and limits through ARIA, with visible keyboard focus.
+- Numeric mode keeps the configured limits visible and provides two inputs for the selected prices. Enter or blur applies an edit; Escape cancels it. Inputs accept decimal points or commas, round to cents, and clamp to the allowed interval. Invalid or empty input restores the previous price.
+- Numeric movement uses one-unit steps and preserves entered cents during dragging. Fixed mode moves through equally spaced options and keeps prices read-only.
 
-Tab moves between the handles in a stable order. Right/Up increase the value and Left/Down decrease it. Home and End move to the first and last values allowed by the other handle. Each handle exposes its price and current limits through ARIA, with a visible focus indicator. The component uses custom elements, not HTML range inputs.
+Each instance starts at the extremes and expects its configuration to remain fixed while mounted.
 
-Both handles can be dragged with a mouse or touch pointer. Clicking the track moves the nearest handle. Pointer capture keeps the drag active outside the track, and release or cancellation ends it. When handles overlap, the initial drag direction determines which one moves. Keyboard and pointer input share the same boundary checks.
+## Mock API
 
-Numeric mode shows the configured limits at the ends of the track and two labeled inputs below it for the selected prices. The inputs have visible borders and a white background. Enter or leaving a field applies the price, rounded to cents and constrained by the allowed interval and the other handle. Empty or invalid text restores the previous price; Escape resets the current edit. Both a decimal point and a decimal comma are accepted. Editing changes the selected prices, not the configured limits. Fixed prices remain read-only labels.
-
-Focus outlines appear during keyboard interaction and are hidden during pointer interaction. Input borders darken while focused or hovered.
-
-The component expects a valid configuration, as returned by the service, that remains fixed while mounted. It does not fetch data or synchronize changing configurations.
-
-## Data flow
-
-Both mock endpoints run within Next.js, with no external service or credentials required:
+The endpoints run within Next.js and require no external services or credentials.
 
 | Endpoint | Response |
 | --- | --- |
 | `GET /api/range` | `{ "min": 1, "max": 100 }` |
 | `GET /api/range-options` | `{ "rangeValues": [1.99, 5.99, 10.99, 30.99, 50.99, 70.99] }` |
 
-`getRangeConfig(mode, signal?)` requests the matching endpoint and validates the JSON before returning a `RangeConfig`. Numeric limits must be finite numbers with `min < max`. Fixed prices must contain at least two finite numbers in strictly increasing order. Invalid responses are rejected rather than sorted or corrected silently.
-
-The service accepts an optional `AbortSignal` for cancellation and uses relative URLs, so it works on either local port. Loading, error, and retry handling will be added with the exercise pages. The home page does not fetch range data yet.
+The service validates numeric bounds and requires at least two finite, strictly increasing fixed prices. Pages show loading and error states with a retry button. Requests are cancelled when the loading component unmounts.
 
 ## Tests
 
-Vitest and React Testing Library cover the home page, endpoint contracts, service validation, HTTP errors, and Range keyboard, pointer, and editing behavior. Component tests check allowed prices, limits, non-crossing handles, accessible values, and invalid edits. Tests live alongside the code they cover. Page integration tests will be added with the same tools when the exercise pages are implemented.
-
-## Development phases
-
-1. Project foundation.
-2. Mock HTTP endpoints and validated data service.
-3. Range core, keyboard navigation, and pointer dragging.
-4. Price editing.
-5. `/exercise1` and `/exercise2` pages, data loading, and integration tests.
-6. Final review and delivery documentation.
-
-The initial phase will be the first commit on `main`. Each subsequent phase will have its own branch and pull request, squash-merged after review.
-
-All project text, documentation, code comments, identifiers, and commit messages must be written in English.
+Vitest and React Testing Library cover each component, the service, API routes, and all pages. They check keyboard and pointer interaction, editable prices, bounds, response validation, and request cancellation. Exercise page tests use the real service and selector, mocking only `fetch` to check loading, interaction, errors, and retry.
 
 ## Dependency notes
 
-The Next.js configuration supports ESLint 10. Some transitive plugins still declare compatibility only up to ESLint 9, so npm reports peer dependency warnings. Installation and linting are checked with the pinned versions.
-
-The initial npm audit reports [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) in `braces`, a transitive linting dependency. The packages in its dependency chain are also reported. The proposed automatic fix downgrades `eslint-config-next` to version 14, so it is not applied to this Next.js 16 project.
-
-The initial `npm audit --omit=dev` check reports no vulnerabilities in production dependencies.
+Some transitive ESLint plugins report peer dependency warnings with ESLint 10; linting passes with the pinned versions. The last audit reported the [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) in development dependencies. The proposed automatic fix downgrades `eslint-config-next` to version 14 and has not been applied to this Next.js 16 project. The production audit (`npm audit --omit=dev`) reported no vulnerabilities.

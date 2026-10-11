@@ -1,4 +1,4 @@
-import Range from '@/components/Range/Range';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 export default function HomePage() {
@@ -12,15 +12,15 @@ export default function HomePage() {
       </p>
       <section className={styles.example} aria-labelledby="numeric-range-heading">
         <h2 id="numeric-range-heading" className={styles.subtitle}>
-          Numeric range
+          <Link href="/exercise1">Exercise 1: Numeric range</Link>
         </h2>
-        <Range mode="continuous" min={1} max={100} />
+        <p>A numeric interval with editable minimum and maximum prices.</p>
       </section>
       <section className={styles.example} aria-labelledby="fixed-range-heading">
         <h2 id="fixed-range-heading" className={styles.subtitle}>
-          Fixed prices
+          <Link href="/exercise2">Exercise 2: Fixed prices</Link>
         </h2>
-        <Range mode="discrete" values={[1.99, 5.99, 10.99, 30.99, 50.99, 70.99]} />
+        <p>A range limited to a predefined set of prices.</p>
       </section>
     </main>
   );

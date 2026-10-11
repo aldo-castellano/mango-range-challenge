@@ -104,12 +104,15 @@ test.each<{ config: RangeConfig; expected: number }>([
     fireEvent.keyDown(lower, { key: 'Home' });
     const input = screen.getByRole('textbox', { name: 'Minimum price in euros' });
     act(() => input.focus());
-    fireEvent.change(input, { target: { value: '20' } });
+    fireEvent.change(input, { target: { value: '20.50' } });
     pointer(lower, 'pointerdown', 100);
     pointer(track, 'pointermove', 120);
-    pointer(track, 'pointerup', 120);
-    expect(lower).toHaveAttribute('aria-valuenow', '30');
-    expect(input).toHaveValue('30.00');
+    expect(lower).toHaveAttribute('aria-valuenow', '30.5');
+    expect(input).toHaveValue('30.50');
+    pointer(track, 'pointermove', 100);
+    pointer(track, 'pointerup', 100);
+    expect(lower).toHaveAttribute('aria-valuenow', '20.5');
+    expect(input).toHaveValue('20.50');
   }
 });
 

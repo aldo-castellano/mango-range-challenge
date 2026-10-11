@@ -1,0 +1,13 @@
+.retry {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #171717;
+  border-radius: 4px;
+  background: #171717;
+  color: #fff;
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: #383838;
+}
