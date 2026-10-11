@@ -1,0 +1,28 @@
+:root {
+  color-scheme: light;
+  color: #171717;
+  background: #faf9f6;
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 20rem;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid #175cd3;
+  outline-offset: 4px;
+}
