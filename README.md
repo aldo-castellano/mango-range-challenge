@@ -4,7 +4,7 @@ A technical challenge to build a price range selector with two modes: a numeric 
 
 ## Status
 
-Phase 3: the Range component now supports both modes, keyboard interaction, and pointer dragging. The home page shows two examples with explicit demo values. Price editing and exercise pages connected to the mock HTTP endpoints will follow in subsequent phases.
+Phase 4: the Range component supports both modes, keyboard interaction, pointer dragging, and two editable prices in numeric mode. The home page shows two examples with explicit demo values. Exercise pages connected to the mock HTTP endpoints will follow in the next phase.
 
 ## Requirements
 
@@ -54,7 +54,7 @@ src/
     icon.svg         # Browser tab icon
   components/
     Range/
-      Range.tsx         # Selection state, keyboard, and pointer interaction
+      Range.tsx         # Selection state, price editing, keyboard, and pointer interaction
       Range.module.css  # Track, handles, and focus styles
       Range.test.tsx
   services/
@@ -81,7 +81,11 @@ Tab moves between the handles in a stable order. Right/Up increase the value and
 
 Both handles can be dragged with a mouse or touch pointer. Clicking the track moves the nearest handle. Pointer capture keeps the drag active outside the track, and release or cancellation ends it. When handles overlap, the initial drag direction determines which one moves. Keyboard and pointer input share the same boundary checks.
 
-The component expects a valid configuration, as returned by the service, that remains fixed while mounted. It does not fetch data or synchronize changing configurations. Editable numeric labels belong to the next phase.
+Numeric mode shows the configured limits at the ends of the track and two labeled inputs below it for the selected prices. The inputs have visible borders and a white background. Enter or leaving a field applies the price, rounded to cents and constrained by the allowed interval and the other handle. Empty or invalid text restores the previous price; Escape resets the current edit. Both a decimal point and a decimal comma are accepted. Editing changes the selected prices, not the configured limits. Fixed prices remain read-only labels.
+
+Focus outlines appear during keyboard interaction and are hidden during pointer interaction. Input borders darken while focused or hovered.
+
+The component expects a valid configuration, as returned by the service, that remains fixed while mounted. It does not fetch data or synchronize changing configurations.
 
 ## Data flow
 
@@ -98,7 +102,7 @@ The service accepts an optional `AbortSignal` for cancellation and uses relative
 
 ## Tests
 
-Vitest and React Testing Library cover the home page, endpoint contracts, service validation, HTTP errors, and Range keyboard and pointer behavior. Component tests check allowed prices, limits, non-crossing handles, and accessible values. Tests live alongside the code they cover. Page integration tests will be added with the same tools when the exercise pages are implemented.
+Vitest and React Testing Library cover the home page, endpoint contracts, service validation, HTTP errors, and Range keyboard, pointer, and editing behavior. Component tests check allowed prices, limits, non-crossing handles, accessible values, and invalid edits. Tests live alongside the code they cover. Page integration tests will be added with the same tools when the exercise pages are implemented.
 
 ## Development phases
 

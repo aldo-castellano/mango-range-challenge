@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import type { RangeConfig } from '@/types/range-config';
 import Range from './Range';
@@ -9,6 +9,67 @@ function pointer(target: HTMLElement, type: string, clientX: number) {
     { pointerId: 1 },
   ));
 }
+
+test('edits both prices and keeps the inputs and handles synchronized', () => {
+  render(<Range mode="continuous" min={1} max={100} />);
+  const lowerInput = screen.getByRole('textbox', { name: 'Minimum price in euros' });
+  const upperInput = screen.getByRole('textbox', { name: 'Maximum price in euros' });
+  const lower = screen.getByRole('slider', { name: 'Minimum price' });
+  const upper = screen.getByRole('slider', { name: 'Maximum price' });
+
+  act(() => lowerInput.focus());
+  fireEvent.change(lowerInput, { target: { value: '20,50' } });
+  fireEvent.keyDown(lowerInput, { key: 'Enter' });
+  expect(lowerInput).not.toHaveFocus();
+  expect(lowerInput).toHaveValue('20.50');
+  expect(lower).toHaveAttribute('aria-valuenow', '20.5');
+
+  act(() => upperInput.focus());
+  fireEvent.change(upperInput, { target: { value: '80' } });
+  fireEvent.blur(upperInput);
+  expect(upperInput).toHaveValue('80.00');
+  expect(upper).toHaveAttribute('aria-valuenow', '80');
+  fireEvent.keyDown(lower, { key: 'ArrowRight' });
+  expect(lowerInput).toHaveValue('21.50');
+  expect(upper).toHaveAttribute('aria-valuemin', '21.5');
+  expect(screen.getByText('€1.00')).toBeVisible();
+  expect(screen.getByText('€100.00')).toBeVisible();
+});
+
+test('clamps edited prices to the allowed interval and the other handle', () => {
+  render(<Range mode="continuous" min={1} max={100} />);
+  const lowerInput = screen.getByRole('textbox', { name: 'Minimum price in euros' });
+  const upperInput = screen.getByRole('textbox', { name: 'Maximum price in euros' });
+
+  for (const [input, value, expected] of [
+    [lowerInput, '-10', '1.00'],
+    [upperInput, '150', '100.00'],
+    [lowerInput, '20', '20.00'],
+    [upperInput, '10', '20.00'],
+    [lowerInput, '90', '20.00'],
+  ] as const) {
+    fireEvent.change(input, { target: { value } });
+    fireEvent.blur(input);
+    expect(input).toHaveValue(expected);
+  }
+});
+
+test('restores the previous price for empty or invalid input and on Escape', () => {
+  render(<Range mode="continuous" min={1} max={100} />);
+  const input = screen.getByRole('textbox', { name: 'Minimum price in euros' });
+
+  for (const value of ['', 'invalid']) {
+    fireEvent.change(input, { target: { value } });
+    fireEvent.blur(input);
+    expect(input).toHaveValue('1.00');
+  }
+  act(() => input.focus());
+  fireEvent.change(input, { target: { value: '30' } });
+  fireEvent.keyDown(input, { key: 'Escape' });
+  expect(input).toHaveValue('1.00');
+  fireEvent.blur(input);
+  expect(screen.getByRole('slider', { name: 'Minimum price' })).toHaveAttribute('aria-valuenow', '1');
+});
 
 test.each<{ config: RangeConfig; expected: number }>([
   { config: { mode: 'continuous', min: 1, max: 100 }, expected: 41 },
@@ -38,6 +99,18 @@ test.each<{ config: RangeConfig; expected: number }>([
   expect(track.releasePointerCapture).toHaveBeenCalledWith(1);
   pointer(track, 'pointermove', 100);
   expect(lower).toHaveAttribute('aria-valuenow', upper.getAttribute('aria-valuenow'));
+
+  if (config.mode === 'continuous') {
+    fireEvent.keyDown(lower, { key: 'Home' });
+    const input = screen.getByRole('textbox', { name: 'Minimum price in euros' });
+    act(() => input.focus());
+    fireEvent.change(input, { target: { value: '20' } });
+    pointer(lower, 'pointerdown', 100);
+    pointer(track, 'pointermove', 120);
+    pointer(track, 'pointerup', 120);
+    expect(lower).toHaveAttribute('aria-valuenow', '30');
+    expect(input).toHaveValue('30.00');
+  }
 });
 
 test('updates numeric prices and accessible limits with the arrow keys', () => {
@@ -59,7 +132,7 @@ test('updates numeric prices and accessible limits with the arrow keys', () => {
   expect(upper).toHaveAttribute('aria-valuenow', '99');
   expect(lower).toHaveAttribute('aria-valuemax', '99');
   expect(upper).toHaveAttribute('aria-valuemin', '2');
-  expect(screen.getByText('€2.00')).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Minimum price in euros' })).toHaveValue('2.00');
   expect(fireEvent.keyDown(lower, { key: 'Tab' })).toBe(true);
 });
 
